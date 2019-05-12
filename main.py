@@ -1,9 +1,12 @@
-import os, re, argparse, dotenv
+import os, re, argparse
 from dotenv import load_dotenv
 from instabot import Bot
 from pprint import pprint
 
 def get_usernames(text):
+  # Code: Regex for Instagram Username and Hashtags
+  # https://blog.jstassen.com/2016/03/code-regex-for-instagram-username-and-hashtags/
+
   pattern = re.compile('(?:@)([A-Za-z0-9_](?:(?:[A-Za-z0-9_]|(?:\.(?!\.))){0,28}(?:[A-Za-z0-9_]))?)')
   return pattern.findall(text)
 
@@ -12,38 +15,20 @@ def is_user_exist(bot, username):
   return bool(bot.get_user_id_from_username(username))
 
 
-def get_comments(bot, media_id):
-  media_comments = bot.get_media_comments(media_id) 
-
-  comments=[]
-  for comment in media_comments:
-    users={}
-    users["text"]=comment["text"]
-    users["user_id"]=comment["user_id"]
-    users["username"]=comment["user"]["username"]
-    comments.append(users)
-  return comments
-
-
 def exist_real_users_in_comment(bot, text):
-  usernames = get_usernames(text)
-  user_exist=bool()
-  for username in usernames:
-    user_exist += is_user_exist(bot, username)
-  return  user_exist
-
+  return bool([username for username in get_usernames(text) if is_user_exist(bot, username)])
 
 def get_users_match_requirements(bot, comments, media_likers, followers):
   users_match_requirements = set()
   for comment in comments:
     if exist_real_users_in_comment(bot, comment["text"]):
-      tuple_comment_wrote_user = comment["user_id"], comment["username"] 
+      tuple_comment_wrote_user = comment["user_id"], comment["user"]["username"]
       if str(comment["user_id"]) in media_likers and str(comment["user_id"]) in followers:
         users_match_requirements.add(tuple_comment_wrote_user)
   return users_match_requirements
 
 
-def winners(link, login, password, username):
+def get_winners(link, login, password, username):
   bot = Bot()
   bot.login(username=login, password=password)
 
@@ -51,9 +36,10 @@ def winners(link, login, password, username):
   
   followers = bot.get_user_followers(username)
   media_likers = bot.get_media_likers(media_id)
-  comments = get_comments(bot, media_id)
-
-  return get_users_match_requirements(bot, comments, media_likers, followers)
+  comments = bot.get_media_comments(media_id)
+  winners = get_users_match_requirements(bot, comments, media_likers, followers)
+  bot.logout()
+  return winners
 
 
 def main():
@@ -71,7 +57,7 @@ def main():
   username = args.username
   link = args.link
 
-  pprint(winners(link=link, login=login, password=password, username=username))
+  pprint(get_winners(link=link, login=login, password=password, username=username))
 
 
 if __name__ == "__main__":
