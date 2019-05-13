@@ -28,7 +28,7 @@ def get_users_match_requirements(bot, comments, media_likers, followers):
   return users_match_requirements
 
 
-def get_winners(link, login, password, username):
+def get_action_participants(link, login, password, username):
   bot = Bot()
   bot.login(username=login, password=password)
 
@@ -57,7 +57,7 @@ def main():
   username = args.username
   link = args.link
 
-  pprint(get_winners(link=link, login=login, password=password, username=username))
+  pprint(get_action_participants(link=link, login=login, password=password, username=username))
 
 
 if __name__ == "__main__":

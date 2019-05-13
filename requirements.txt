@@ -1,5 +1,2 @@
 instabot==0.31.0
-requests==2.21.0
-argparse==1.4.0
 python-dotenv==0.10.1
-pprint==0.1
